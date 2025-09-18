@@ -283,6 +283,109 @@ The free-threaded builds (available experimentally in Python 3.13+) represent a 
 concurrency model. While they offer the promise of true parallelism for CPU-bound tasks, they require much more careful
 attention to thread safety than traditional Python development.
 
+How do you use the thread sanitizer?
+=====================================
+
+Thread Sanitizer (TSan) is a powerful runtime tool that detects data races and other threading bugs in C/C++ programs,
+including CPython and its extensions. TSan works by instrumenting memory accesses and synchronization operations,
+tracking the happens-before relationships between threads to identify potential race conditions that might not manifest
+during normal testing.
+
+**Building Python with Thread Sanitizer:**
+
+To use TSan with CPython, you need to build Python from source with TSan enabled::
+
+    # Configure Python build with TSan
+    ./configure --with-thread-sanitizer --with-pydebug
+
+    # For free-threaded builds, also add:
+    ./configure --with-thread-sanitizer --with-pydebug --disable-gil
+
+    # Build Python
+    make -j$(nproc)
+
+The ``--with-thread-sanitizer`` flag enables TSan instrumentation, while ``--with-pydebug`` provides additional
+debugging symbols and assertions that help TSan provide more detailed reports.
+
+**Running Python with Thread Sanitizer:**
+
+Once built with TSan, simply run your Python scripts normally. TSan will automatically monitor all thread operations::
+
+    # Run your script
+    ./python my_threaded_script.py
+
+    # Run the test suite with TSan
+    ./python -m test -j$(nproc)
+
+    # Run specific tests
+    ./python -m test test_threading test_concurrent_futures
+
+**Understanding TSan Output:**
+
+When TSan detects a race condition, it produces a detailed report showing:
+
+1. **The type of race** (data race, use-after-free, etc.)
+2. **Stack traces** for the conflicting accesses
+3. **Thread information** showing which threads were involved
+4. **Memory addresses** where the race occurred
+
+Example TSan output::
+
+    WARNING: ThreadSanitizer: data race (pid=12345)
+      Write of size 8 at 0x7b0400000000 by thread T2:
+        #0 increment_counter counter.c:10 (python+0x123456)
+        #1 worker_thread threading.c:50 (python+0x234567)
+
+      Previous read of size 8 at 0x7b0400000000 by thread T1:
+        #0 read_counter counter.c:15 (python+0x345678)
+        #1 main_thread threading.c:30 (python+0x456789)
+
+**Suppressing False Positives:**
+
+CPython maintains suppression files for known benign races or intentional lock-free algorithms. These are located in
+``Tools/tsan/`` directory:
+
+- ``suppressions_free_threading.txt``: Suppressions for free-threaded builds
+- ``suppressions.txt``: General suppressions for builds with GIL
+
+To use custom suppressions, set the TSAN_OPTIONS environment variable::
+
+    export TSAN_OPTIONS="suppressions=my_suppressions.txt"
+    ./python my_script.py
+
+**Common TSan Findings in Python Code:**
+
+1. **Missing Locks**: Accessing shared data without proper synchronization
+2. **Lock Order Violations**: Potential deadlocks from inconsistent lock ordering
+3. **Race on Reference Counts**: Particularly important in free-threaded builds
+4. **Unsynchronized Callbacks**: C extensions calling back into Python without proper locking
+
+**Best Practices for TSan Testing:**
+
+1. **Test with Realistic Workloads**: Use multi-threaded scenarios that stress concurrent access patterns
+2. **Enable TSan in CI**: Include TSan builds in continuous integration to catch regressions
+3. **Review All Reports**: Even "benign" races can indicate design issues
+4. **Test C Extensions**: Many race conditions occur at the Python/C boundary
+5. **Use with Free-Threading**: TSan is especially valuable for testing free-threaded Python builds where
+   races are more likely to manifest
+
+**Performance Considerations:**
+
+Programs running under TSan typically experience:
+- 5-15x CPU slowdown
+- 5-10x memory overhead
+- Increased thread synchronization overhead
+
+Therefore, TSan should be used during development and testing, not in production environments.
+
+**Integration with Development Workflow:**
+
+For developers working on CPython or C extensions:
+
+1. Build a TSan-enabled Python for testing alongside your regular development build
+2. Run your test suite under TSan before submitting patches
+3. Pay special attention to any new warnings introduced by your changes
+4. Document any intentional lock-free algorithms that might trigger false positives
 
 Standard Library Modules
 ========================
