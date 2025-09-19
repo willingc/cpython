@@ -9,7 +9,9 @@ What is thread safety?
 
 Thread safety refers to the property of code that ensures correct execution when accessed by multiple threads
 simultaneously. A piece of code is considered thread-safe if it can be called concurrently by multiple threads without
-causing data races, corruption, or inconsistent state. In Python, thread safety is particularly important in
+causing data races, corruption, or inconsistent state.
+
+In Python, thread safety is particularly important in
 multi-threaded applications where shared resources (such as data structures, files, or network connections) may be
 accessed by multiple threads at the same time. Thread-safe code typically uses synchronization mechanisms like locks,
 mutexes, or atomic operations to coordinate access to shared resources, preventing race conditions and ensuring that
@@ -19,10 +21,16 @@ operations complete atomically without interference from other threads.
 When to consider thread safety?
 ================================
 
+Shared mutable data
+
+Non-atomic operations (context changes)
+
 In Python, thread safety is guaranteed in specific situations due to the Global Interpreter Lock (GIL) in the standard
 CPython implementation. The GIL ensures that only one thread executes Python bytecode at a time, which makes many basic
 operations thread-safe by default. Simple operations like reading or replacing a single variable, appending to a list,
-or accessing dictionary items are atomic and therefore thread-safe. However, thread safety is not guaranteed for
+or accessing dictionary items are atomic and therefore thread-safe.
+
+However, thread safety is not guaranteed for
 compound operations (like checking if a key exists then adding it), operations that release the GIL (such as I/O
 operations or calls to C extensions), or when using Python implementations without a GIL (like Jython, IronPython, or
 the experimental free-threaded builds of CPython 3.13+). Additionally, even with the GIL, you must still use proper
