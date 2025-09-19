@@ -271,7 +271,7 @@ subtle and harder to reproduce. Tools like Thread Sanitizer (TSAN) become essent
 
 **Best Practices for Free-Threading:**
 
-1. **Assume nothing is thread-safe** unless explicitly documented
+1. **When in doubt, assume something may not be thread-safe** unless explicitly documented
 2. **Use immutable data structures** wherever possible
 3. **Prefer message passing** over shared memory
 4. **Use thread-safe collections** from the ``queue`` module
