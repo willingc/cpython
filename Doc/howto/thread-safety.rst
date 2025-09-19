@@ -1,8 +1,31 @@
 .. _thread-safety-howto:
 
-***********************
-Thread safety in Python
-***********************
+********************************
+Thread safety and "No surprises"
+********************************
+
+General approach  for Doc
+=========================
+- What is thread safety (High level)
+- What is a thread
+- Context on thread as a CS concept vs Threading library
+  - sometimes thread usage is invisible
+  - thread usage in internals
+- Thread safety is important for both versions and conceptually the same for each version
+- Thread safety fundamentals
+   - Ways lack of safety arises
+   - Patterns
+- How to make applications thread-safe
+   - Third party libraries
+   - Conservative patterns/ways of working
+   - Reading the docs and source code
+- Python versions/flavors
+   - GIL 30yrs ago single core computers
+   - Free-threading ability to take advantage of the processing power of multiple cores
+- Python
+- Free threading Python
+- A walk through the modules
+- Additional resources
 
 Why is thread safety important?
 ===============================
@@ -18,6 +41,15 @@ We probably shouldn't assume that people know this.
 
  A thread is the smallest unit of execution that can be scheduled by an operating system. It's a lightweight subprocess that runs within a process and shares
  the process's memory space and resources.
+
+Other useful background
+=======================
+
+GIL - lock; single thread at a time (single core cpus)
+
+free-threading - multiple core cpus (simultaneous work being done by each core)
+Multiple threads can run simultaneously. Each thread has its own lock.
+
 
 What is thread safety?
 ======================
@@ -435,6 +467,9 @@ For developers working on CPython or C extensions:
 Standard Library Modules
 ========================
 
+synchronized (i.e., thread-safe) classes SimpleQueue, Queue, LifoQueue, and PriorityQueue.
+deque
+
 The following table lists all documentation in the CPython repository that mentions thread safety:
 
 .. list-table:: Thread Safety References in CPython Documentation
@@ -765,3 +800,15 @@ The following table lists Python source files that mention thread safety in thei
      - ``Tools/c-analyzer/distutils/cygwinccompiler.py``
      - "-mthreads: Support thread-safe exception handling on Mingw32"
 
+Luciano
+=======
+
+Chapter Summary Mastering the standard library sequence types is a prerequisite for writing concise, effective, and
+idiomatic Python code. Python sequences are often categorized as mutable or immutable, but it is also useful to consider
+a different axis: flat sequences and container sequences. The former are more compact, faster, and easier to use, but
+are limited to storing atomic data such as numbers, characters, and bytes. Container sequences are more flexible, but
+may surprise you when they hold mutable objects, so you need to be careful to use them correctly with nested data
+structures.
+
+Unfortunately, Python has no foolproof immutable container sequence type: even “immutable” tuples can have their values
+changed when they contain mutable items like lists or user-defined objects.
