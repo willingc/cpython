@@ -4,12 +4,45 @@
 Thread safety in Python
 ***********************
 
+Why is thread safety important?
+===============================
+
+Data integrity
+
+Predictability of actions and results
+
+What is a thread?
+=================
+
+We probably shouldn't assume that people know this.
+
+ A thread is the smallest unit of execution that can be scheduled by an operating system. It's a lightweight subprocess that runs within a process and shares
+ the process's memory space and resources.
+
 What is thread safety?
 ======================
 
 Thread safety refers to the property of code that ensures correct execution when accessed by multiple threads
 simultaneously. A piece of code is considered thread-safe if it can be called concurrently by multiple threads without
 causing data races, corruption, or inconsistent state.
+
+data race:
+
+data corruption:
+
+inconsistent state:
+In programming, an inconsistent state occurs when data or system components violate expected invariants or constraints, leading to contradictory or invalid
+  conditions.
+
+  Common examples:
+  - Race conditions: Multiple threads modifying shared data without proper synchronization, causing partial updates
+  - Partial transactions: Database operations that complete some but not all steps, violating ACID properties
+  - Broken invariants: Object fields that should maintain relationships (e.g., a list's size field not matching actual element count)
+  - Stale cache: Cached data that doesn't reflect the current state of the source data
+
+  This typically happens during concurrent operations, system failures, or bugs in state management logic.
+
+
 
 In Python, thread safety is particularly important in
 multi-threaded applications where shared resources (such as data structures, files, or network connections) may be
@@ -24,6 +57,8 @@ When to consider thread safety?
 Shared mutable data
 
 Non-atomic operations (context changes)
+
+External library code might not be designed for thread safety
 
 In Python, thread safety is guaranteed in specific situations due to the Global Interpreter Lock (GIL) in the standard
 CPython implementation. The GIL ensures that only one thread executes Python bytecode at a time, which makes many basic
@@ -224,6 +259,8 @@ objects. This follows the "Don't communicate by sharing memory; share memory by 
 
 **10. Use Higher-Level Abstractions**: Prefer ``concurrent.futures.ThreadPoolExecutor`` or ``multiprocessing.Pool``
 which handle synchronization internally, over manually managing threads and locks.
+
+
 
 Does free-threading have different considerations than Python with a GIL with regards to thread safety?
 ========================================================================================================
