@@ -812,3 +812,46 @@ structures.
 
 Unfortunately, Python has no foolproof immutable container sequence type: even “immutable” tuples can have their values
 changed when they contain mutable items like lists or user-defined objects.
+
+If two threads are reading a property that was not previously cached, the first thread will need to compute the data for
+the cache attribute (__speaker_objs in the examples) and the second thread may read a cached value that is not yet
+complete. Fortunately, Python 3.8 introduced the @functools.cached_property decorator, which is thread safe.
+Unfortunately, it comes with a couple of caveats, explained next.
+
+Despite these limitations, @cached_property addresses a common need in a simple way, and it is thread safe. Its
+Python code is an example of using a reentrant lock.
+
+Concepts
+========
+
+safety by imposing limitations
+
+balance flexibility, usability, safety
+
+security
+
+https://py-free-threading.github.io/examples/
+
+Atomic data structures
+
+safety security guarantees
+
+Many Python packages, particularly packages relying on C extension modules, do not consider multithreaded use or make
+strong assumptions about the GIL providing sequential consistency in multithreaded contexts. These packages will:
+
+- fail to produce deterministic results on the free-threaded build
+- may, if there are C extensions involved, crash the interpreter in multithreaded use in ways that are impossible on the GIL-enabled build
+
+Attempting to parallelize many workflows using the Python threading module will not produce any speedups on the
+GIL-enabled build, so thread safety issues that are possible even with the GIL are not hit often since users do not
+make use of threading as much as other parallelization strategies. This means many codebases have threading bugs that
+up-until-now have only been theoretical or present in niche use cases. With free-threading, many more users will want to
+use Python threads.
+
+This means we must analyze Python codebases to identify supported and unsupported multithreaded workflows and make
+changes to fix thread safety issues. Extra care must be taken to address this need, particularly when using low-level C,
+C++, Cython, and Rust code exposed to Python. Even pure Python codebases can exhibit non-determinism and races in the
+free-threaded build that are either very unlikely or impossible in the default configuration of the GIL-enabled build.
+
+For a more in-depth look at the differences between the GIL-enabled and free-threaded build, we suggest reading the
+ft_utils documentation on this topic.
